@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!--
+  habits/edit.ejs — Edit an existing habit.
+  We inject values from the `habit` passed by the controller.
+  Note: `<%= ... %>` escapes content; safe for titles/descriptions.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Habit</title>
+  <link rel="stylesheet" href="/index.css" />
+</head>
+<body>
+  <header>
+    <h1>Edit Habit</h1>
+    <%- include('../partials/nav') %>
+  </header>
+  <!-- Method override to use PUT via HTML form -->
+  <form action="/habits/<%= habit._id %>?_method=PUT" method="POST">
+    <input type="text" name="title" value="<%= habit.title %>" required />
+    <input type="text" name="description" value="<%= habit.description %>" />
+    <select name="frequency">
+      <option value="daily" <%= habit.frequency === 'daily' ? 'selected' : '' %>>Daily</option>
+      <option value="weekly" <%= habit.frequency === 'weekly' ? 'selected' : '' %>>Weekly</option>
+      <option value="monthly" <%= habit.frequency === 'monthly' ? 'selected' : '' %>>Monthly</option>
+    </select>
+    <input type="number" name="targetCount" value="<%= habit.targetCount %>" />
+    <input type="number" name="duration" value="<%= habit.duration %>" />
+
+  <!-- Habitica options reflect current values from the habit -->
+  <fieldset>
+      <legend>Habitica Options</legend>
+      <% if (habit.habiticaTaskId) { %>
+        <p>Linked to Habitica task: <code><%= habit.habiticaTaskId %></code></p>
+      <% } %>
+      <% if (habit.habiticaSyncError) { %>
+        <p style="color: red;">Last sync error: <%= habit.habiticaSyncError %></p>
+      <% } %>
+      <div>
+        <label>Task Type</label>
+        <select name="habiticaType">
+          <option value="habit" <%= habit.habiticaType === 'habit' ? 'selected' : '' %>>Habit</option>
+          <option value="daily" <%= habit.habiticaType === 'daily' ? 'selected' : '' %>>Daily</option>
+          <option value="todo" <%= habit.habiticaType === 'todo' ? 'selected' : '' %>>To‑Do</option>
+          <option value="reward" <%= habit.habiticaType === 'reward' ? 'selected' : '' %>>Reward</option>
+        </select>
+      </div>
+      <div>
+  <!-- Checkboxes: mark checked based on boolean fields -->
+  <label>Scoring</label>
+        <label><input type="checkbox" name="habiticaUp" <%= habit.habiticaUp ? 'checked' : '' %> > Up (+)</label>
+        <label><input type="checkbox" name="habiticaDown" <%= habit.habiticaDown ? 'checked' : '' %> > Down (−)</label>
+      </div>
+      <div>
+        <label>Priority</label>
+        <select name="habiticaPriority">
+          <option value="0.1" <%= Number(habit.habiticaPriority) === 0.1 ? 'selected' : '' %>>Trivial (0.1)</option>
+          <option value="1" <%= Number(habit.habiticaPriority) === 1 ? 'selected' : '' %>>Easy (1)</option>
+          <option value="1.5" <%= Number(habit.habiticaPriority) === 1.5 ? 'selected' : '' %>>Medium (1.5)</option>
+          <option value="2" <%= Number(habit.habiticaPriority) === 2 ? 'selected' : '' %>>Hard (2)</option>
+        </select>
+      </div>
+      <div>
+        <label>Attribute</label>
+        <select name="habiticaAttribute">
+          <option value="str" <%= habit.habiticaAttribute === 'str' ? 'selected' : '' %>>Strength</option>
+          <option value="int" <%= habit.habiticaAttribute === 'int' ? 'selected' : '' %>>Intelligence</option>
+          <option value="con" <%= habit.habiticaAttribute === 'con' ? 'selected' : '' %>>Constitution</option>
+          <option value="per" <%= habit.habiticaAttribute === 'per' ? 'selected' : '' %>>Perception</option>
+        </select>
+      </div>
+      <div>
+        <label>Habitica Notes</label>
+        <input type="text" name="habiticaNotes" value="<%= habit.habiticaNotes || '' %>" />
+      </div>
+      <div>
+        <label>Tags (comma‑separated)</label>
+        <input type="text" name="habiticaTags" value="<%= Array.isArray(habit.habiticaTags) ? habit.habiticaTags.join(', ') : '' %>" />
+      </div>
+    </fieldset>
+    <button type="submit">Save</button>
+  </form>
+  <p><a href="/habits">Back</a></p>
+</body>
+</html>

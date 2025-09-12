@@ -1,0 +1,77 @@
+    body {
+        background-color: rgb(87, 104, 99);
+        color: white;   
+        text-align: center;
+        font-size: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+height: 100vh;
+text-shadow: 0rem 0rem 1rem rgb(0, 0, 0);
+margin: 0;
+    }   
+
+
+.carattere-regular {
+  font-family: "Carattere", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+a {
+    color: white;
+    text-decoration: none;
+    margin-left: 1rem;
+
+}
+a:hover {
+    color: black;  
+    text-shadow: 1rem 0rem 1rem rgb(0, 0, 0);
+} 
+
+
+header h1 {
+    margin-bottom: 2rem;
+    font-size: 80px;
+font-weight: 700;
+font-style: normal;                     
+color: white;
+text-shadow: 1rem 1rem 2rem rgb(0, 0, 0);
+}
+button {
+    padding: 1rem 3rem;
+    border-radius: 1rem;
+    border: 2px solid rgba(253, 253, 253, 0 .377);
+    background-color: rgba(0, 0, 0, 0.377);
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    margin-top: 2rem;     
+    transition: all 0.3s ease;
+}
+button:hover {
+    background-color: rgba(255, 255, 255, 0.377);   
+    color: black;
+    text-shadow: 1rem 0rem 1rem rgb(0, 0, 0);
+    border: 2px solid rgba(0, 0, 0, 0.377);
+}
+button:active {
+    transform: scale(0.95);
+}
+
+ul {
+  
+    list-style: none;
+    padding: 0;
+    border-radius: 1rem;
+    background-color: rgba(0, 0, 0, 0.377);
+    margin: 2rem auto;
+    width: 10rem;
+    padding: 1rem;
+}
+
+li {
+    margin: 1rem 0;
+    font-size: 1.5rem;
+    color: white;
+    text-shadow: 0rem 0rem 1rem rgb(0, 0, 0);
+}

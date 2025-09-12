@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<!--
+  habitLogs/new.ejs — Minimal form to add a log for a habit.
+  We use a <select> with fixed options to control allowed statuses.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Log</title>
+  <link rel="stylesheet" href="/index.css" />
+</head>
+<body>
+  <header>
+    <h1>New Log for <%= habit.title %></h1>
+    <%- include('../partials/nav') %>
+  </header>
+  <form action="/logs/<%= habit._id %>" method="POST">
+    <select name="status">
+      <option value="completed">Completed</option>
+      <option value="missed">Missed</option>
+    </select>
+    <button type="submit">Save</button>
+  </form>
+  <p><a href="/logs/<%= habit._id %>">Back</a></p>
+</body>
+</html>

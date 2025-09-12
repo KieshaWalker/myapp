@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<%- include('partials/nav') %>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nutrition Macros Tester</title>
+  <link rel="stylesheet" href="/index.css" />
+  
+</head>
+<body>
+  <header>
+    <h1>Nutrition Macros Tester</h1>
+  </header>
+
+  <main>
+  <!-- Simple form to collect a free-text food description; JS intercepts submit. -->
+  <form id="food-form">
+      <div class="row">
+        <input id="food" type="text" placeholder="e.g. 2 eggs and bacon, 1 apple, 1 cup rice" required />
+        <button type="submit">Get Macros</button>
+      </div>
+    </form>
+
+  <!-- Placeholder for results; we'll inject a <table> as innerHTML when data arrives. -->
+  <section id="results" class="muted">Enter a food description and click Get Macros.</section>
+  </main>
+
+  <script>
+    const form = document.getElementById('food-form');
+    const results = document.getElementById('results');
+
+    function fmt(n) { return (n ?? 0).toFixed(2); }
+
+  // Handle submit without a full page reload
+  form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const q = document.getElementById('food').value.trim();
+      if (!q) return;
+      results.textContent = 'Fetching...';
+      try {
+  // We call the server route GET /nutrition?food=... which proxies to Nutritionix
+  const res = await fetch(`/nutrition?food=${encodeURIComponent(q)}`, {
+          headers: { 'Accept': 'application/json' },
+          credentials: 'same-origin'
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          results.textContent = `Error ${res.status}: ${text}`;
+          return;
+        }
+  const data = await res.json(); // parse JSON body
+        const foods = Array.isArray(data.foods) ? data.foods : [];
+        if (!foods.length) {
+          results.textContent = 'No foods found for that query.';
+          return;
+        }
+
+        let totalCal = 0, totalProt = 0, totalCarb = 0, totalFat = 0;
+  // Build up <tr> rows from the Nutritionix response
+  const rows = foods.map(f => {
+          const name = f.food_name || 'Item';
+          const qty = f.serving_qty;
+          const unit = f.serving_unit;
+          const cal = f.nf_calories || 0;
+          const prot = f.nf_protein || 0;
+          const carb = f.nf_total_carbohydrate || 0;
+          const fat = f.nf_total_fat || 0;
+          totalCal += cal; totalProt += prot; totalCarb += carb; totalFat += fat;
+          return `<tr>
+            <td>${name}</td>
+            <td>${qty ?? ''} ${unit ?? ''}</td>
+            <td>${fmt(cal)}</td>
+            <td>${fmt(prot)}</td>
+            <td>${fmt(carb)}</td>
+            <td>${fmt(fat)}</td>
+          </tr>`;
+        }).join('');
+
+        // Use innerHTML to render a summary table
+        results.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Food</th>
+                <th>Serving</th>
+                <th>Calories</th>
+                <th>Protein (g)</th>
+                <th>Carbs (g)</th>
+                <th>Fat (g)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2">Totals</td>
+                <td>${fmt(totalCal)}</td>
+                <td>${fmt(totalProt)}</td>
+                <td>${fmt(totalCarb)}</td>
+                <td>${fmt(totalFat)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        `;
+      } catch (err) {
+        results.textContent = 'Request failed: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>

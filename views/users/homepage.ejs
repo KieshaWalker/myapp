@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home</title>
+  <link rel="stylesheet" href="/index.css" />
+</head>
+<body>
+  <header>
+  <%- include('../partials/nav') %>
+    <h1>Welcome <%= (user && user.username) ? user.username : 'Guest' %></h1>
+  </header>
+
+<p>you are a reflection of your habits.</p>
+  <main>
+    <section>
+      <h2>Your Habits</h2>
+      <% if (typeof habits !== 'undefined' && habits && habits.length) { %>
+        <ul>
+          <% habits.forEach(h => { %>
+            <li>
+              <strong><%= h.title %></strong>
+              <% if (h.description) { %>
+                <div><%= h.description %></div>
+              <% } %>
+            </li>
+          <% }) %>
+        </ul>
+      <% } else { %>
+        <p>No habits yet.</p>
+      <% } %>
+    </section>
+  </main>
+</body>
+</html>
