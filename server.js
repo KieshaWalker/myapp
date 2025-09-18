@@ -20,8 +20,33 @@ const nutritionRouter = require('./routes/nutrition');
 const habitRouter = require('./routes/habitRoutes');
 const logRouter = require('./routes/logRoutes');
 const userRouter = require('./routes/userRoutes');
-// Connect to MongoDB — URI is read from .env (MONGODB_URI)
-mongoose.connect(process.env.MONGODB_URI);
+// Connect to MongoDB — URI is read from env (MONGODB_URI)
+const MONGO_URI = process.env.MONGODB_URI || process.env.MONGODB_URL; // allow common alt name
+
+function redactMongoUri(uri) {
+  if (!uri) return '';
+  try {
+    // hide username:password while keeping host/db visible
+    return uri.replace(/\/\/.*?:.*?@/, '//<redacted>@');
+  } catch (e) {
+    return '<redacted-uri>';
+  }
+}
+
+if (!MONGO_URI) {
+  console.error('\n[Startup error] Missing MONGODB_URI environment variable.');
+  console.error('Set it locally in .env and on Heroku via:');
+  console.error('  heroku config:set MONGODB_URI="your-mongodb-connection-string"\n');
+  process.exit(1);
+}
+
+console.log('Connecting to MongoDB at', redactMongoUri(MONGO_URI));
+mongoose
+  .connect(MONGO_URI)
+  .catch(err => {
+    console.error('[MongoDB] Initial connection error:', err && err.message ? err.message : err);
+  });
+
 const port = process.env.PORT ? process.env.PORT : '3000';
 
 mongoose.connection.on('connected', () => {
@@ -47,16 +72,24 @@ app.use(express.static(path.join(__dirname, 'public'))); // serve files in /publ
 
 
 // passUser makes the current user available as res.locals.user to all EJS views
-app.use(passUser);
+app.use(passUser);    
 
 // Root route — simple homepage
 app.get('/', async (req, res) => {
   res.render('index.ejs');
-});
+}); 
+
+
 // API testing UI (Nutrition Macros tester) — protected, requires login
-app.get('/api-test', isSignedIn, (req, res) => {
+app.get('/api-test', isSignedIn, async (req, res) => {
   res.render('api-test.ejs');
 });
+
+app.use('/testing', isSignedIn, async (req, res) => {
+  res.render('testing/index.ejs');
+});
+
+
 
 
 // Convenience redirects so /register and /login work without /users prefix
@@ -64,14 +97,15 @@ app.get('/register', (req, res) => res.redirect('/users/register'));
 app.get('/login', (req, res) => res.redirect('/users/login'));
 app.get('/logins', (req, res) => res.redirect('/users/login'));
 
-// app.use(isSignedIn); // Use route-level protection instead
 
 
 // Mount routers under their base paths
 app.use('/nutrition', nutritionRouter);
 app.use('/habits', habitRouter);
-app.use('/logs', logRouter);
+app.use('/logs', logRouter);  
 app.use('/users', userRouter);
+app.use('/testing', nutritionRouter); 
+
 // app.use(isSignedIn); // Use route-level protection instead
 
 app.listen(port, () => {

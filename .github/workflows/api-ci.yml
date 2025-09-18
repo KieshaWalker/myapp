@@ -1,0 +1,46 @@
+name: API CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'python-backend/**'
+  pull_request:
+    paths:
+      - 'python-backend/**'
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python-backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements.txt
+      - name: Import smoke test
+        run: |
+          python - <<'PY'
+          import importlib
+          for mod in ['fastapi','httpx','motor','dotenv']:
+              importlib.import_module(mod)
+          print('Imports OK')
+          PY
+
+  deploy:
+    if: ${{ startsWith(github.ref, 'refs/tags/api-v') && secrets.HEROKU_API_KEY != '' }}
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: akhileshns/heroku-deploy@v4.1.9
+        with:
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_app_name: ${{ secrets.HEROKU_API_APP_NAME }}
+          heroku_email: ${{ secrets.HEROKU_EMAIL }}
+          appdir: python-backend
