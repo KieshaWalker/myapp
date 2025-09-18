@@ -24,6 +24,8 @@ Key endpoints:
 - `GET /api/db/health` – Database connectivity
 - `GET /api/nutrition?food=...` – Nutritionix proxy
 - `GET/POST /api/habits` – Sample habits
+- `GET /api/habitica/tasks` – List Habitica tasks for the configured user
+- `POST /api/habitica/tasks/{taskId}/score` – Score a Habitica task (direction `up` or `down`)
 
 ## Why SPA + API separation (acquisition-ready)
 

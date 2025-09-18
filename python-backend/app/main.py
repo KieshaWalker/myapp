@@ -18,6 +18,12 @@ MONGODB_URI = os.getenv("MONGODB_URI")
 MONGODB_DB = os.getenv("MONGODB_DB", "myapp")
 ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
 
+# Habitica credentials (global for now; can be per-user in the future)
+HABITICA_USER_ID = os.getenv("HABITICA_USER_ID")
+HABITICA_API_TOKEN = os.getenv("HABITICA_API_TOKEN")
+HABITICA_API_BASE = os.getenv("HABITICA_API_BASE", "https://habitica.com/api/v3")
+HABITICA_CLIENT = os.getenv("HABITICA_CLIENT", "showup-api-local")
+
 app = FastAPI(
     title="ShowUp API",
     description="Nutrition, habits, and integrations API for the ShowUp app.",
@@ -63,6 +69,55 @@ async def nutrition(food: str | None = None):
                     "Content-Type": "application/json",
                 },
             )
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- Habitica proxy endpoints ---
+def habitica_headers() -> Dict[str, str]:
+    if not HABITICA_USER_ID or not HABITICA_API_TOKEN:
+        raise HTTPException(status_code=500, detail="Habitica credentials not configured")
+    return {
+        "x-api-user": HABITICA_USER_ID,
+        "x-api-key": HABITICA_API_TOKEN,
+        "x-client": HABITICA_CLIENT,
+        "Content-Type": "application/json",
+    }
+
+
+@app.get("/api/habitica/tasks")
+async def habitica_list_tasks(type: str | None = None):
+    # type can be: habits, dailys, todos, rewards (Habitica supports filtering via query)
+    headers = habitica_headers()
+    url = f"{HABITICA_API_BASE}/tasks/user"
+    params = {"type": type} if type else None
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.get(url, headers=headers, params=params)
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/habitica/tasks/{task_id}/score")
+async def habitica_score_task(task_id: str, payload: Dict[str, Any] = Body(...)):
+    direction = payload.get("direction")
+    amount = payload.get("amount")
+    if direction not in ("up", "down"):
+        raise HTTPException(status_code=400, detail="'direction' must be 'up' or 'down'")
+    headers = habitica_headers()
+    url = f"{HABITICA_API_BASE}/tasks/{task_id}/score/{direction}"
+    body = {"amount": amount} if amount is not None else None
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.post(url, headers=headers, json=body)
             r.raise_for_status()
             return r.json()
     except httpx.HTTPStatusError as e:

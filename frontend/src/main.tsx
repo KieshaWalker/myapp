@@ -12,6 +12,8 @@ function App() {
   const [habitName, setHabitName] = useState('New Habit')
   const [apiHealth, setApiHealth] = useState<string>('unknown')
   const [dbHealth, setDbHealth] = useState<string>('unknown')
+  const [htasks, setHtasks] = useState<any[]>([])
+  const [selectedTaskId, setSelectedTaskId] = useState<string>('')
 
   const fetchNutrition = async () => {
     setLoading(true)
@@ -79,11 +81,42 @@ function App() {
     }
   }
 
+  const loadHabitica = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/habitica/tasks?type=habits`)
+      if (!res.ok) throw new Error(await res.text())
+      const json = await res.json()
+      // Habitica returns { success: true, data: [...] }
+      const list = Array.isArray(json?.data) ? json.data : []
+      setHtasks(list)
+    } catch (e: any) {
+      setError(e.message)
+    }
+  }
+
+  const scoreHabitica = async (direction: 'up' | 'down') => {
+    if (!selectedTaskId) {
+      setError('Select a Habitica taskId first')
+      return
+    }
+    try {
+      const res = await fetch(`${API_BASE}/api/habitica/tasks/${selectedTaskId}/score`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ direction }),
+      })
+      if (!res.ok) throw new Error(await res.text())
+      await loadHabitica()
+    } catch (e: any) {
+      setError(e.message)
+    }
+  }
+
   return (
     <div style={{ padding: 24, fontFamily: 'sans-serif' }}>
       <h1>ShowUp Nutrition (React)</h1>
       <div>
-        <input value={food} onChange={(e) => setFood(e.target.value)} placeholder="e.g., banana" />
+  <input value={food} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFood(e.target.value)} placeholder="e.g., banana" />
         <button onClick={fetchNutrition} disabled={loading}>Fetch</button>
       </div>
       {loading && <p>Loading...</p>}
@@ -105,11 +138,32 @@ function App() {
       <h2>Habits (Python API + Mongo)</h2>
       <div>
         <button onClick={loadHabits}>Load Habits</button>
-        <input value={habitName} onChange={(e) => setHabitName(e.target.value)} />
+  <input value={habitName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setHabitName(e.target.value)} />
         <button onClick={createHabit}>Create Habit</button>
       </div>
       {habits.length > 0 && (
         <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(habits, null, 2)}</pre>
+      )}
+
+      <hr />
+      <h2>Habitica (proxy via API)</h2>
+      <div>
+        <button onClick={loadHabitica}>Load Habitica Habits</button>
+        {htasks.length > 0 ? (
+          <select value={selectedTaskId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedTaskId(e.target.value)}>
+            <option value="">Select a task</option>
+            {htasks.map((t: any) => (
+              <option key={t.id} value={t.id}>{t.text || t.alias || t.id}</option>
+            ))}
+          </select>
+        ) : (
+          <input placeholder="taskId" value={selectedTaskId} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedTaskId(e.target.value)} />
+        )}
+        <button onClick={() => scoreHabitica('up')}>Score Up</button>
+        <button onClick={() => scoreHabitica('down')}>Score Down</button>
+      </div>
+      {htasks.length > 0 && (
+        <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(htasks, null, 2)}</pre>
       )}
     </div>
   )

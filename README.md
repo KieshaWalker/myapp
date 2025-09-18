@@ -43,6 +43,8 @@ npm run dev
 
 Open http://localhost:5173 and exercise the UI. The SPA will call the API at http://localhost:8000.
 
+Note: The SPA includes simple Habitica testing controls (load tasks and score a selected task) when HABITICA_* env vars are set on the API.
+
 Optional checks:
 
 ```zsh
@@ -54,6 +56,13 @@ curl -s -X POST http://localhost:8000/api/habits \
 
 # Nutrition API (requires Nutritionix env)
 curl -s 'http://localhost:8000/api/nutrition?food=banana' | jq .
+
+# Habitica (optional: set HABITICA_* in python-backend/.env)
+curl -s 'http://localhost:8000/api/habitica/tasks?type=habits' | jq .
+# Score a habit up (replace TASK_ID)
+curl -s -X POST 'http://localhost:8000/api/habitica/tasks/TASK_ID/score' \
+	-H 'Content-Type: application/json' \
+	-d '{"direction":"up"}' | jq .
 ```
 
 If you prefer serving the SPA from FastAPI for local tests, build and copy it:
