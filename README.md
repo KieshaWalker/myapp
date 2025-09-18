@@ -2,9 +2,9 @@
 
 ## Quickstart: Run everything locally
 
-This project uses a separate FastAPI API and a CDN-hosted React SPA. For local development, run them side by side.
+This project uses a separate FastAPI API and a CDN-hosted React SPA. For local development, run them side by side in two terminals.
 
-1) Backend API (FastAPI)
+Terminal 1 — Backend API (FastAPI)
 
 ```zsh
 cd python-backend
@@ -32,7 +32,7 @@ curl -s http://localhost:8000/api/health | jq .
 curl -s http://localhost:8000/api/db/health | jq .
 ```
 
-2) Frontend SPA (React + Vite)
+Terminal 2 — Frontend SPA (React + Vite)
 
 ```zsh
 cd frontend
