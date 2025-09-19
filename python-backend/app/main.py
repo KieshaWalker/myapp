@@ -4,6 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 import httpx
+import ssl
+import certifi
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Optional, Any, Dict
@@ -17,6 +19,23 @@ API_KEY = os.getenv("NUTRITIONIX_API_KEY")
 MONGODB_URI = os.getenv("MONGODB_URI")
 MONGODB_DB = os.getenv("MONGODB_DB", "myapp")
 ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
+
+# SSL verification control (useful for development vs production)
+VERIFY_SSL = os.getenv("VERIFY_SSL", "true").lower() == "true"
+
+# Create SSL context with proper certificates for production
+def get_ssl_verify():
+    """Return SSL verification setting for httpx client"""
+    if not VERIFY_SSL:
+        return False  # Disable verification for dev
+    
+    # For production, use certifi's certificate bundle
+    try:
+        return certifi.where()  # Returns path to certificate bundle
+    except Exception as e:
+        print(f"WARNING: Could not load certificates: {e}")
+        # In production, you might want to fail here instead
+        return False
 
 # Habitica credentials (global for now; can be per-user in the future)
 HABITICA_USER_ID = os.getenv("HABITICA_USER_ID")
@@ -59,7 +78,7 @@ async def nutrition(food: str | None = None):
     if not APP_ID or not API_KEY:
         raise HTTPException(status_code=500, detail="Nutritionix credentials not configured")
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
+        async with httpx.AsyncClient(timeout=30, verify=get_ssl_verify()) as client:
             r = await client.post(
                 "https://trackapi.nutritionix.com/v2/natural/nutrients",
                 json={"query": food},
@@ -96,7 +115,7 @@ async def habitica_list_tasks(type: str | None = None):
     url = f"{HABITICA_API_BASE}/tasks/user"
     params = {"type": type} if type else None
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
+        async with httpx.AsyncClient(timeout=30, verify=get_ssl_verify()) as client:
             r = await client.get(url, headers=headers, params=params)
             r.raise_for_status()
             return r.json()
@@ -116,7 +135,7 @@ async def habitica_score_task(task_id: str, payload: Dict[str, Any] = Body(...))
     url = f"{HABITICA_API_BASE}/tasks/{task_id}/score/{direction}"
     body = {"amount": amount} if amount is not None else None
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
+        async with httpx.AsyncClient(timeout=30, verify=get_ssl_verify()) as client:
             r = await client.post(url, headers=headers, json=body)
             r.raise_for_status()
             return r.json()

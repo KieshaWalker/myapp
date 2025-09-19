@@ -33,3 +33,12 @@ chmod +x ../scripts/build_frontend.sh
 # Then run the API as usual; it will serve index.html at /
 uvicorn app.main:app --reload --port 8000
 ```
+
+
+Testing the Server
+Once running, you can test these endpoints:
+
+http://localhost:8000/api/health - Health check
+http://localhost:8000/api/nutrition?food=banana - Nutrition data
+http://localhost:8000/api/db/health - Database connection
+http://localhost:8000/api/habits - Habits API

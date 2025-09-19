@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
 
@@ -36,12 +36,13 @@ export default function App() {
   const [htasks, setHtasks] = useState<HabiticaTask[]>([])
   const [selectedTaskId, setSelectedTaskId] = useState<string>('')
 
-  const fetchNutrition = useCallback(async () => {
+  const fetchNutrition = useCallback(async (term?: string) => {
     setLoading(true)
     setError(null)
     setData(null)
     try {
-      const res = await fetch(`${API_BASE}/api/nutrition?food=${encodeURIComponent(food)}`)
+      const q = typeof term === 'string' ? term : food
+      const res = await fetch(`${API_BASE}/api/nutrition?food=${encodeURIComponent(q)}`)
       if (!res.ok) {
         const txt = await res.text()
         throw new Error(`${res.status} ${txt}`)
@@ -55,10 +56,7 @@ export default function App() {
     }
   }, [food])
 
-  useEffect(() => {
-    // initial load
-    fetchNutrition()
-  }, [fetchNutrition])
+  // Only fetch on explicit submit; no auto-fetch on change or mount
 
   const loadHabits = async () => {
     try {
@@ -136,10 +134,20 @@ export default function App() {
   return (
     <div style={{ padding: 24, fontFamily: 'sans-serif' }}>
       <h1>ShowUp Nutrition (React)</h1>
-      <div>
-  <input value={food} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFood(e.target.value)} placeholder="e.g., banana" />
-        <button onClick={fetchNutrition} disabled={loading}>Fetch</button>
-      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          fetchNutrition()
+        }}
+        style={{ display: 'flex', gap: 8, alignItems: 'center' }}
+      >
+        <input
+          value={food}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFood(e.target.value)}
+          placeholder="e.g., banana"
+        />
+        <button type="submit" disabled={loading}>Fetch</button>
+      </form>
       {loading && <p>Loading...</p>}
       {error && <pre style={{ color: 'crimson', whiteSpace: 'pre-wrap' }}>{error}</pre>}
       {data && (
