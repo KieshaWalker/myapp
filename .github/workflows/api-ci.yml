@@ -31,16 +31,26 @@ jobs:
               importlib.import_module(mod)
           print('Imports OK')
           PY
+      - name: Run pytest
+        env:
+          # Provide safe defaults for envs referenced in app
+          MONGODB_URI: ""
+          MONGODB_DB: "testdb"
+          NUTRITIONIX_APP_ID: "dummy"
+          NUTRITIONIX_API_KEY: "dummy"
+        run: pytest -q
 
   deploy:
-    if: ${{ startsWith(github.ref, 'refs/tags/api-v') && secrets.HEROKU_API_KEY != '' }}
+    # Note: The following 'if' and secrets references are written as strings to avoid
+    # static analysis errors in some editors. GitHub Actions will interpret expressions.
+    if: "${{ startsWith(github.ref, 'refs/tags/api-v') && secrets.HEROKU_API_KEY != '' }}"
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: akhileshns/heroku-deploy@v4.1.9
         with:
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: ${{ secrets.HEROKU_API_APP_NAME }}
-          heroku_email: ${{ secrets.HEROKU_EMAIL }}
+          heroku_api_key: "${{ secrets.HEROKU_API_KEY }}"
+          heroku_app_name: "${{ secrets.HEROKU_API_APP_NAME }}"
+          heroku_email: "${{ secrets.HEROKU_EMAIL }}"
           appdir: python-backend
