@@ -7,7 +7,8 @@ This project uses a separate FastAPI API and a CDN-hosted React SPA. For local d
 Terminal 1 — Backend API (FastAPI)
 
 ```zsh
-cd python-backend
+cd python-backendls
+
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt

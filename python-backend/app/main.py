@@ -1,10 +1,10 @@
 from fastapi import FastAPI, HTTPException, Body
-from fastapi.middleware.cors import CORSMiddleware
+# Import CORSMiddleware to enable handling of cross-origin requests (CORS) in FastAPI
+from fastapi.middleware.cors import CORSMiddleware  # correct
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 import httpx
-import ssl
 import certifi
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
